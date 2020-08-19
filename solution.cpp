@@ -32,7 +32,7 @@ public:
     }
 };
   
-int minDistance(vector<vector<char>>& grid) 
+int minDistance(vector<vector<char>>& grid, int fuel) 
 { 
     QItem source(0, 0, 0); 
     int rows = grid.size();
@@ -65,7 +65,8 @@ int minDistance(vector<vector<char>>& grid)
     while (!q.empty()) { 
         QItem p = q.front(); 
         q.pop(); 
-  
+        // Fuel constraint
+        // If p.distance = 45, do not add neighbors
         // Destination found; 
         if (grid[p.row][p.col] == 'G') {
             pair<int, int> path = visited[p.row][p.col].prev;            
@@ -74,49 +75,75 @@ int minDistance(vector<vector<char>>& grid)
                 path = visited[path.first][path.second].prev;
             }
             return p.dist; 
-
         }
-  
-        // moving up 
-        if (p.row - 1 >= 0 && 
-            visited[p.row - 1][p.col].visited == false) { 
-            q.push(QItem(p.row - 1, p.col, p.dist + 1)); 
-            visited[p.row - 1][p.col].visited = true; 
-            visited[p.row - 1][p.col].prev = pair<int, int> (p.row, p.col);
-        } 
-  
-        // moving down 
-        if (p.row + 1 < rows && 
-            visited[p.row + 1][p.col].visited == false) { 
-            q.push(QItem(p.row + 1, p.col, p.dist + 1)); 
-            visited[p.row + 1][p.col].visited = true; 
-            visited[p.row + 1][p.col].prev = pair<int, int> (p.row, p.col);
-        } 
-  
-        // moving left 
-        if (p.col - 1 >= 0 && 
-            visited[p.row][p.col - 1].visited == false) { 
-            q.push(QItem(p.row, p.col - 1, p.dist + 1)); 
-            visited[p.row][p.col - 1].visited = true; 
-            visited[p.row][p.col - 1].prev = pair<int, int> (p.row, p.col);
-        } 
-  
-         // moving right 
-        if (p.col + 1 < columns && 
-            visited[p.row][p.col + 1].visited == false) { 
-            q.push(QItem(p.row, p.col + 1, p.dist + 1)); 
-            visited[p.row][p.col + 1].visited = true; 
-            visited[p.row][p.col + 1].prev = pair<int, int> (p.row, p.col);
-        } 
+
+        if (p.dist <= fuel) {
+            // moving up 
+            if (p.row - 1 >= 0 && 
+                visited[p.row - 1][p.col].visited == false) { 
+                if (grid[p.row][p.col] == '+') {
+                    q.push(QItem(p.row - 1, p.col, 0)); 
+                }
+                else{
+                    q.push(QItem(p.row - 1, p.col, p.dist + 1)); 
+                }
+                visited[p.row - 1][p.col].visited = true; 
+                visited[p.row - 1][p.col].prev = pair<int, int> (p.row, p.col);
+            } 
+    
+            // moving down 
+            if (p.row + 1 < rows && 
+                visited[p.row + 1][p.col].visited == false) { 
+                if (grid[p.row][p.col] == '+') {
+                    q.push(QItem(p.row + 1, p.col, 0)); 
+                }
+                else{
+                    q.push(QItem(p.row + 1, p.col, p.dist + 1)); 
+                }
+                visited[p.row + 1][p.col].visited = true; 
+                visited[p.row + 1][p.col].prev = pair<int, int> (p.row, p.col);
+            } 
+    
+            // moving left 
+            if (p.col - 1 >= 0 && 
+                visited[p.row][p.col - 1].visited == false) { 
+                if (grid[p.row][p.col] == '+') {
+                    q.push(QItem(p.row, p.col - 1, 0)); 
+                }
+                else{
+                    q.push(QItem(p.row, p.col - 1, p.dist + 1)); 
+                }
+                visited[p.row][p.col - 1].visited = true; 
+                visited[p.row][p.col - 1].prev = pair<int, int> (p.row, p.col);
+            } 
+    
+            // moving right 
+            if (p.col + 1 < columns && 
+                visited[p.row][p.col + 1].visited == false) { 
+                if (grid[p.row][p.col] == '+') {
+                    q.push(QItem(p.row, p.col + 1, 0)); 
+                }
+                else{
+                    q.push(QItem(p.row, p.col + 1, p.dist + 1)); 
+                }
+                visited[p.row][p.col + 1].visited = true; 
+                visited[p.row][p.col + 1].prev = pair<int, int> (p.row, p.col);
+            }
+        }
+         
     } 
     return -1; 
 } 
 
-void read_in_grid(string file_name, vector<vector<char>> &grid) {
+//returns fuel constraint
+int read_in_grid(string file_name, vector<vector<char>> &grid) {
+    int fuel;
     ifstream file;
     string line;
     file.open(file_name);
     if (file.is_open()) {
+        getline(file, line);
+        fuel = 25; //TODO
         while(getline(file, line)) {
 
             vector<char> row;
@@ -127,6 +154,7 @@ void read_in_grid(string file_name, vector<vector<char>> &grid) {
         }
         file.close();
     }
+    return fuel;
 }
 
 void print_grid(vector<vector<char>> &grid) {
@@ -141,11 +169,13 @@ void print_grid(vector<vector<char>> &grid) {
 // Driver code 
 int main() 
 { 
+    cout << stoi("45") << endl;
     vector<vector<char>> grid;
-    read_in_grid("Programming Test A5 Data File.txt", grid);
+    int fuel;
+    fuel = read_in_grid("test3.txt", grid);
     print_grid(grid);
   
-    if (minDistance(grid) == -1) {
+    if (minDistance(grid, fuel) == -1) {
         cout << "NO SOLUTION";
     }
     else {
